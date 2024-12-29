@@ -1,0 +1,224 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Network{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --text-color: #2c3e50;
+            --background-color: #f4f6f7;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.8) !important;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+            transform: scale(1.05);
+        }
+
+        .nav-link.active {
+            color: white !important;
+            font-weight: 700;
+        }
+
+        .container-content {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        footer {
+            background-color: var(--text-color);
+            color: white;
+            padding: 15px 0;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Network</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile' username=user.username %}">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'index' %}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/following' %}active{% endif %}" href="{% url 'followed_posts' %}">Following</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#createPostModal">Create Post</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/login' %}active{% endif %}" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/register' %}active{% endif %}" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container flex-grow-1">
+        <div class="container-content">
+            {% block body %}
+                <h1>Welcome to Network</h1>
+                <p>Your content will appear here.</p>
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center">
+        <div class="container">
+            <p>&copy; 2024 Network. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Create Post Modal -->
+    {% if user.is_authenticated %}
+    <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createPostModalLabel">Create a New Post</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="new-post-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <textarea class="form-control" id="post-content" rows="3" placeholder="What's on your mind?" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Post</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <!-- Custom JavaScript for handling post creation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('new-post-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const content = document.getElementById('post-content').value;
+                    fetch('/create_post/', {  // Adjust this URL to match your Django URL configuration
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({content: content})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Handle successful post creation (e.g., show a success message, clear the form)
+                            alert('Post created successfully!');
+                            document.getElementById('post-content').value = '';
+                            $('#createPostModal').modal('hide');
+                            // Optionally, refresh the page or update the post list
+                            // window.location.reload();
+                        } else {
+                            // Handle errors
+                            alert('Error creating post: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while creating the post.');
+                    });
+                });
+            }
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+        const likeButtons = document.querySelectorAll('.like-btn');
+        likeButtons.forEach(button => {
+            button.onclick = () => {
+                const postId = button.getAttribute('data-id');
+                fetch(`/like/${postId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.error) {
+                        alert(result.error);
+                    } else {
+                        button.innerText = result.liked ? 'Unlike' : 'Like';
+                        const likesCountElement = button.nextElementSibling;
+                        likesCountElement.innerText = `${result.likes_count} Likes`;
+                    }
+                });
+            };
+        });
+    });
+    </script>
+</body>
+</html>
+
+
+

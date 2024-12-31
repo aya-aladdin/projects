@@ -1,0 +1,96 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+<style>
+    .post-container {
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .reply {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    .comment-form {
+        margin-top: 20px;
+    }
+    .like-btn {
+        background-color: transparent;
+        color: #007bff;
+        border: 1px solid #007bff;
+        padding: 6px 14px;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+    .like-btn:hover {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="post-container">
+        <h2>{{ post.author.username }}'s Post</h2>
+        <p>{{ post.content }}</p>
+        <p><strong>Posted on:</strong> {{ post.timestamp }}</p>
+        <button class="like-btn" data-id="{{ post.id }}">
+            {% if user in post.likes.all %}
+                Unlike
+            {% else %}
+                Like
+            {% endif %}
+        </button>
+        <span class="text-muted ml-2">{{ post.likes.count }} Likes</span>
+    </div>
+
+    <h3>Comments</h3>
+    <div id="comments">
+        {% for reply in replies %}
+            <div class="reply">
+                <strong>{{ reply.author.username }}</strong>: {{ reply.content }}
+                <small class="text-muted d-block mt-1">{{ reply.timestamp }}</small>
+            </div>
+        {% empty %}
+            <p>No comments yet.</p>
+        {% endfor %}
+    </div>
+
+    {% if user.is_authenticated %}
+    <form action="{% url 'reply_post' post.id %}" method="POST" class="comment-form">
+        {% csrf_token %}
+        <textarea class="form-control" name="reply-content" placeholder="Add a comment..." required></textarea>
+        <button type="submit" class="btn btn-primary mt-2">Comment</button>
+    </form>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const likeBtn = document.querySelector('.like-btn');
+    if (likeBtn) {
+        likeBtn.onclick = function() {
+            const postId = this.dataset.id;
+            fetch(`/like/${postId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.liked !== undefined) {
+                    this.textContent = data.liked ? 'Unlike' : 'Like';
+                    const likesCount = document.querySelector('.text-muted');
+                    likesCount.textContent = `${data.likes_count} Likes`;
+                }
+            });
+        };
+    }
+});
+</script>
+{% endblock %}

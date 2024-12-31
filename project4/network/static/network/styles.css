@@ -1,0 +1,139 @@
+/* General page styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f1f1f1;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    background-color: #007bff;
+    padding: 0.5rem 1rem;
+}
+
+.navbar-brand {
+    color: white;
+    font-weight: bold;
+}
+
+.navbar-nav .nav-item .nav-link {
+    color: white;
+}
+
+/* Posts and Thread Layout */
+.posts {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+}
+
+.post {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #007bff;
+}
+
+.post-header .post-author {
+    font-weight: bold;
+}
+
+.post-content {
+    margin-top: 10px;
+}
+
+.post-footer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.like-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.like-btn:hover {
+    background-color: #0056b3;
+}
+
+.reply-btn {
+    color: #007bff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.replies {
+    margin-top: 15px;
+    padding-left: 20px;
+    border-left: 2px solid #f1f1f1;
+}
+
+.reply {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.reply-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #007bff;
+}
+
+.reply-header .reply-author {
+    font-weight: bold;
+}
+
+.reply-content {
+    margin-top: 5px;
+}
+
+/* Pagination styling */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 10px 0;
+}
+
+.pagination .btn {
+    border-radius: 0.25rem;
+    margin: 0 5px;
+    padding: 10px 15px;
+    font-size: 14px;
+}
+
+.pagination .btn a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.pagination .btn:disabled {
+    background-color: #e9ecef;
+    border-color: #ddd;
+    color: #6c757d;
+}
+
+.pagination .btn:hover {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}

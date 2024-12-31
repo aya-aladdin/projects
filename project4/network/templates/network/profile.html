@@ -1,0 +1,149 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+<style>
+    .profile-header {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .profile-stats {
+        font-size: 1.1em;
+        color: #6c757d;
+    }
+    .post {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: box-shadow 0.3s ease;
+    }
+    .post:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .post h4 {
+        margin-bottom: 10px;
+    }
+    .post-content {
+        margin-bottom: 15px;
+    }
+    .post-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .like-btn {
+        transition: all 0.3s ease;
+    }
+    .like-btn:hover {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="profile-header">
+        <h2 id="username">{{ profile_user.username }}'s Profile</h2>
+        <p class="profile-stats">
+            <span id="followersCount">Followers: {{ followers_count }}</span> | 
+            <span id="followingCount">Following: {{ following_count }}</span>
+        </p>
+
+        {% if user.is_authenticated and user != profile_user %}
+            <button id="follow-btn" class="follow-btn btn btn-outline-custom" data-username="{{ profile_user.username }}">
+                {% if is_following %} Unfollow {% else %} Follow {% endif %}
+            </button> 
+        {% endif %}
+    </div>
+
+    <h3>Posts (<span id="postCount">{{ posts.count }}</span>)</h3>
+    <div id="postsList">
+        {% for post in posts %}
+            <div class="post">
+                <h4>
+                    <a href="{% url 'profile' username=post.author.username %}" class="text-decoration-none">{{ post.author.username }}</a>
+                    <small class="text-muted">- {{ post.timestamp|date:"F d, Y" }}</small>
+                </h4>
+                <p class="post-content">{{ post.content }}</p>
+                <div class="post-actions">
+                    <button class="like-btn btn btn-outline-primary" data-post-id="{{ post.id }}">
+                        {% if user in post.likes.all %}Unlike{% else %}Like{% endif %}
+                    </button>
+                    <small class="text-muted likes-count" id="likes-count-{{ post.id }}">Likes: {{ post.likes.count }}</small>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-muted">No posts available.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = '{{ csrf_token }}';
+
+    // Function to handle AJAX requests
+    function handleFetch(url, method, callback) {
+        fetch(url, {
+            method: method,
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success !== undefined) {
+                callback(data);
+            } else if (data.liked !== undefined) {
+                callback(data);
+            } else {
+                alert(data.message || 'An error occurred');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing your request');
+        });
+    }
+
+    // Follow Button Handler
+    const followBtn = document.getElementById('follow-btn');
+    if (followBtn) {
+        followBtn.addEventListener('click', function() {
+            const username = this.getAttribute('data-username');
+            const url = `/follow/${username}/`;
+            
+            handleFetch(url, 'POST', function(data) {
+                followBtn.textContent = data.is_following ? 'Unfollow' : 'Follow';
+                document.getElementById('followersCount').textContent = `Followers: ${data.followers_count}`;
+            });
+        });
+    }
+
+    document.querySelectorAll('.like-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const postId = this.getAttribute('data-id'); // Ensure you're using the correct attribute name
+        const url = `/like/${postId}/`;
+        const likesCountElem = this.nextElementSibling;
+
+        handleFetch(url, 'POST', function(data) {
+            if (data.liked !== undefined) {
+                this.textContent = data.liked ? 'Unlike' : 'Like';
+                let likesCount = parseInt(likesCountElem.textContent.split(': ')[1]);
+                likesCount = data.liked ? likesCount + 1 : likesCount - 1;
+                likesCountElem.textContent = `Likes: ${likesCount}`;
+            }
+        }.bind(this)); // Bind 'this' to refer to the button element
+    });
+});
+
+});
+
+</script>
+{% endblock %}

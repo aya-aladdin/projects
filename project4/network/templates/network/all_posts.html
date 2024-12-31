@@ -1,0 +1,120 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+<div class="container mt-4">
+    <h3>All Posts</h3>
+
+    {% if user.is_authenticated %}
+    <form id="new-post-form">
+        <textarea id="post-content" class="form-control" placeholder="What's on your mind?" required></textarea>
+        <button type="submit" class="btn btn-primary mt-2">Post</button>
+    </form>
+    {% endif %}
+
+    <div id="post-container">
+        {% for post in posts %}
+            <div class="post mt-3" id="post-{{ post.id }}">
+                <p><strong>{{ post.author.username }}</strong> - {{ post.timestamp }}</p>
+                <div class="post-content" id="content-{{ post.id }}">
+                    <p>{{ post.content }}</p>
+                </div>
+                <button class="like-btn btn btn-outline-secondary" data-id="{{ post.id }}">
+                    {% if user in post.likes.all %}
+                        Unlike
+                    {% else %}
+                        Like
+                    {% endif %}
+                </button>
+                <span class="likes-count">{{ post.likes.count }} Likes</span>
+
+                <!-- Replies -->
+                <div class="replies mt-2">
+                    {% for reply in post.replies.all %}
+                        <div class="reply">
+                            <p><strong>{{ reply.author.username }}</strong> - {{ reply.timestamp }}</p>
+                            <p>{{ reply.content }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Reply Form -->
+                {% if user.is_authenticated %}
+                <form class="reply-form mt-2" action="{% url 'reply_post' post.id %}" method="POST">
+                    {% csrf_token %}
+                    <textarea class="form-control" name="reply-content" placeholder="Reply to this post..." required></textarea>
+                    <button type="submit" class="btn btn-outline-primary mt-2">Reply</button>
+                </form>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>No posts available.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Handle new post submission
+        const form = document.querySelector('#new-post-form');
+        if (form) {
+            form.onsubmit = event => {
+                event.preventDefault();
+                const content = document.querySelector('#post-content').value;
+                fetch('/new', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content })
+                })
+                .then(response => response.json())
+                . then(result => {
+                    if (result.error) {
+                        alert(result.error);  // Display error if any
+                    } else {
+                        // Create a new post element
+                        const postContainer = document.querySelector('#post-container');
+                        const newPost = document.createElement('div');
+                        newPost.className = 'post mt-3';
+                        newPost.id = `post-${result.post.id}`;
+                        newPost.innerHTML = `
+                            <p><strong>${result.post.author}</strong> - just now</p>
+                            <div class="post-content">
+                                <p>${result.post.content}</p>
+                            </div>
+                            <button class="like-btn btn btn-outline-secondary" data-id="${result.post.id}">Like</button>
+                            <span class="likes-count">0 Likes</span>
+                        `;
+                        postContainer.prepend(newPost);  // Add the new post at the top
+                        document.querySelector('#post-content').value = '';  // Clear the textarea
+                    }
+                });
+            };
+        }
+
+        // Handle like button functionality
+        document.querySelectorAll('.like-btn').forEach(button => {
+            button.onclick = () => {
+                const postId = button.getAttribute('data-id');
+                fetch(`/like/${postId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.error) {
+                        alert(result.error);
+                    } else {
+                        button.textContent = result.liked ? 'Unlike' : 'Like';
+                        const likesCount = button.nextElementSibling;
+                        likesCount.textContent = `${result.likes} Likes`;
+                    }
+                });
+            };
+        });
+    });
+</script>
+{% endblock %}

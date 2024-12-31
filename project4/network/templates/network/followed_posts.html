@@ -1,0 +1,103 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h2>Posts from Users You Follow</h2>
+
+        <div id="post-container">
+            {% for post in posts %}
+                <div class="post mt-3" id="post-{{ post.id }}">
+                    <p><strong>{{ post.author.username }}</strong> - {{ post.timestamp }}</p>
+                    <div class="post-content" id="content-{{ post.id }}">
+                        <p>{{ post.content }}</p>
+                    </div>
+                    {% if post.author == user %}
+                        <button class="edit-btn btn btn-warning" data-id="{{ post.id }}">Edit</button>
+                    {% endif %}
+                    <button class="like-btn btn btn-outline-secondary" data-id="{{ post.id }}">
+                        {% if user in post.likes.all %}
+                            Unlike
+                        {% else %}
+                            Like
+                        {% endif %}
+                    </button>
+                    <span class="likes-count">{{ post.likes.count }} Likes</span>
+                </div>
+            {% empty %}
+                <p>No posts available from users you follow.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle edit button clicks
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.onclick = () => {
+                    const postId = button.dataset.id;
+                    const postContentDiv = document.getElementById(`content-${postId}`);
+                    const originalContent = postContentDiv.querySelector('p').innerText;
+
+                    // Replace post content with a textarea and save/cancel buttons
+                    postContentDiv.innerHTML = `
+                        <textarea class="form-control" id="edit-content-${postId}" required>${originalContent}</textarea>
+                        <button class="save-btn btn btn-success mt-2" data-id="${postId}">Save</button>
+                        <button class="cancel-btn btn btn-secondary mt-2">Cancel</button>
+                    `;
+
+                    // Save changes
+                    postContentDiv.querySelector('.save-btn').onclick = () => {
+                        const newContent = document.getElementById(`edit-content-${postId}`).value;
+                        fetch(`/edit-post/${postId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ content: newContent })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                postContentDiv.innerHTML = `<p>${result.content}</p>`;
+                            } else {
+                                alert(result.error || 'Failed to update the post.');
+                            }
+                        })
+                        .catch(() => alert('An error occurred while saving changes.'));
+                    };
+
+                    // Cancel editing
+                    postContentDiv.querySelector('.cancel-btn').onclick = () => {
+                        postContentDiv.innerHTML = `<p>${originalContent}</p>`;
+                    };
+                };
+            });
+
+            // Handle like button clicks
+            document.querySelectorAll('.like-btn').forEach(button => {
+                button.onclick = () => {
+                    const postId = button.dataset.id;
+                    const isLike = button.textContent.trim() === 'Like';
+                    fetch(`/like/${postId}/`, {
+                        method: isLike ? 'POST' : 'DELETE',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.liked !== undefined) {
+                            button.textContent = data.liked ? 'Unlike' : 'Like';
+                            button.nextElementSibling.textContent = `${data.likes} Likes`;
+                        } else {
+                            alert(data.error || 'Failed to update likes.');
+                        }
+                    })
+                    .catch(() => alert('An error occurred while updating likes.'));
+                };
+            });
+        });
+
+    </script>
+{% endblock %}

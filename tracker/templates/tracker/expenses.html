@@ -1,0 +1,236 @@
+{% extends 'tracker/layout.html' %}
+
+{% block content %}
+<main>
+    <div class="container">
+        <div class="dashboard-container">
+            <h2>Your Expenses</h2>
+
+            <!-- Success Messages Section -->
+            {% if messages %}
+            <section class="messages">
+                {% for message in messages %}
+                <div class="alert alert-success">{{ message }}</div>
+                {% endfor %}
+            </section>
+            {% endif %}
+
+            <!-- Expense List Section -->
+            <section id="expensesList" class="expenses-list" style="display: block;">
+                {% if expenses %}
+                <table class="table table-striped table-bordered" id="expenseTable">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Amount</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseBody">
+                        {% for expense in expenses %}
+                        <tr class="expense-container" >
+                            <td>${{ expense.amount|floatformat:2 }}</td>
+                            <td>{{ expense.description }}</td>
+                            <td>{{ expense.category }}</td>
+                            <td>{{ expense.date|date:"F j, Y" }}</td>
+                            <td><button class="btn btn-sm btn-info">Edit</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-info" role="alert">
+                    You have no expenses to display. Please add a new one.
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- Add Expense Button -->
+            <div class="text-center my-4">
+                <button id="addExpenseBtn" class="btn dashboard-btn" onclick="toggleView('add')">Add New Expense</button>
+            </div>
+
+            <!-- Add Expense Form Section -->
+            <section id="addExpenseForm" class="form-container" style="display: none;">
+                <h3>Add New Expense</h3>
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label for="amount">Amount:</label>
+                        <input type="number" id="amount" required step="0.01" placeholder="Enter amount">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <input type="text" id="description" required placeholder="Enter description">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category:</label>
+                        <input type="text" id="category" required placeholder="Enter category">
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date:</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <button type="submit" class="btn dashboard-btn">Add Expense</button>
+                </form>
+            </section>
+
+            <!-- Edit Expense Section -->
+            <section id="editExpenseSection" class="form-container" style="display: none;">
+                <h3>Edit Expense</h3>
+                <form id="editExpenseForm">
+                    <div class="form-group">
+                        <label for="editAmount">Amount:</label>
+                        <input type="number" id="editAmount" required step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">Description:</label>
+                        <input type="text" id="editDescription" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCategory">Category:</label>
+                        <input type="text" id="editCategory" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDate">Date:</label>
+                        <input type="date" id="editDate" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="toggleView('expenses')">Cancel</button>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle toggling views, adding and editing expenses -->
+    <script>
+        let expensesData = []; // Store expenses data for dynamic updates
+        let currentEditingExpenseId = null;
+
+        // Toggle between views (expense list, add new expense, or edit expense)
+        function toggleView(view) {
+            const expensesList = document.getElementById('expensesList');
+            const addExpenseForm = document.getElementById('addExpenseForm');
+            const editExpenseSection = document.getElementById('editExpenseSection');
+            const addExpenseBtn = document.getElementById('addExpenseBtn');
+
+            if (view === 'expenses') {
+                expensesList.style.display = 'block';
+                addExpenseForm.style.display = 'none';
+                editExpenseSection.style.display = 'none';
+                addExpenseBtn.style.display = 'block';
+            } else if (view === 'add') {
+                expensesList.style.display = 'none';
+                addExpenseForm.style.display = 'block';
+                editExpenseSection.style.display = 'none';
+                addExpenseBtn.style.display = 'none';
+            } else if (view === 'edit') {
+                expensesList.style.display = 'none';
+                addExpenseForm.style.display = 'none';
+                editExpenseSection.style.display = 'block';
+                addExpenseBtn.style.display = 'none';
+            }
+        }
+
+        // Handle adding a new expense
+        document.getElementById('expenseForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const amount = parseFloat(document.getElementById('amount').value).toFixed(2);
+            const description = document.getElementById('description').value;
+            const category = document.getElementById('category').value;
+            const date = new Date(document.getElementById('date').value).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Add new expense to the data (in a real app, you would send this to the server)
+            expensesData.push({
+                id: Date.now(),  // Simple unique ID for each new expense
+                amount,
+                description,
+                category,
+                date
+            });
+
+            // Clear form and update the list
+            document.getElementById('expenseForm').reset();
+            toggleView('expenses');
+            renderExpenses();
+        });
+
+        // Handle editing an expense
+        function editExpense(id) {
+            currentEditingExpenseId = id;
+
+            const expense = expensesData.find(exp => exp.id === id);
+
+            document.getElementById('editAmount').value = expense.amount;
+            document.getElementById('editDescription').value = expense.description;
+            document.getElementById('editCategory').value = expense.category;
+            document.getElementById('editDate').value = expense.date;
+
+            toggleView('edit');
+        }
+
+        // Handle saving the edited expense
+        document.getElementById('editExpenseForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const amount = parseFloat(document.getElementById('editAmount').value).toFixed(2);
+            const description = document.getElementById('editDescription').value;
+            const category = document.getElementById('editCategory').value;
+            const date = new Date(document.getElementById('editDate').value).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Find and update the expense in the data
+            const expense = expensesData.find(exp => exp.id === currentEditingExpenseId);
+            expense.amount = amount;
+            expense.description = description;
+            expense.category = category;
+            expense.date = date;
+
+            // Update the list
+            renderExpenses();
+            toggleView('expenses');
+        });
+
+        // Render the list of expenses
+        function renderExpenses() {
+            const tbody = document.getElementById('expenseBody');
+            tbody.innerHTML = '';
+
+            expensesData.forEach(expense => {
+                const tr = document.createElement('tr');
+                tr.classList.add('expense-container');
+                tr.onclick = () => editExpense(expense.id);
+
+                tr.innerHTML = `
+                    <td>$${expense.amount}</td>
+                    <td>${expense.description}</td>
+                    <td>${expense.category}</td>
+                    <td>${expense.date}</td>
+                    <td><button class="btn btn-sm btn-info">Edit</button></td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Set today's date by default for the form
+        window.onload = function () {
+            const dateInput = document.getElementById('date');
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+
+            // Render the initial expenses (if any)
+            renderExpenses();
+        };
+    </script>
+</main>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends 'tracker/layout.html' %}
+
+{% block title %}Welcome to Finance Tracker{% endblock %}
+
+{% block content %}
+    <div class="dashboard-container">
+        <h1 class="welcome-heading">Welcome to Finance Tracker!</h1>
+
+        <div class="features-section">
+            <h2>Features and Benefits</h2>
+            <div class="cards-container">
+                <!-- Card 1 -->
+                <div class="card">
+                    <div class="card-front">
+                        <h3>View Balances Across Bank Accounts</h3>
+                    </div>
+                    <div class="card-back">
+                        <p>Add the bank accounts you want to track and get a consolidated view of your account balances.</p>
+                    </div>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="card">
+                    <div class="card-front">
+                        <h3>One Place for All Transactions</h3>
+                    </div>
+                    <div class="card-back">
+                        <p>Get a single view of expenses so you don't need to write them down or make Excel sheets to keep track.</p>
+                    </div>
+                </div>
+                
+                <!-- Card 3 -->
+                <div class="card">
+                    <div class="card-front">
+                        <h3>See Where You Spend the Most</h3>
+                    </div>
+                    <div class="card-back">
+                        <p>Get real-time categorization of your expenses so you know where your money goes every month.</p>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="card">
+                    <div class="card-front">
+                        <h3>Track Your FDs and RDs</h3>
+                    </div>
+                    <div class="card-back">
+                        <p>Monitor your Fixed Deposits (FDs) and Recurring Deposits (RDs) for a single view of your investments till date.</p>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="card">
+                    <div class="card-front">
+                        <h3>Set Budgeting Goals</h3>
+                    </div>
+                    <div class="card-back">
+                        <p>Set monthly budgeting goals and track your spending to stay within your limits.</p>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="card">
+                    <div class="card-front">
+                        <h3>Investment Portfolio Tracker</h3>
+                    </div>
+                    <div class="card-back">
+                        <p>Track the performance of your stocks, mutual funds, and other investments in real-time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Reset and global styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Dashboard container */
+        .dashboard-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        /* Headings */
+        .dashboard-container h1, .dashboard-container h2 {
+            color: #5f8d4e;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .features-section {
+            text-align: center;
+            margin: 30px auto;
+        }
+
+        /* Card container (flexbox layout) */
+        .cards-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Card styles */
+        .card {
+            perspective: 1100px;
+            width: 300px;
+            height: 200px;
+        }
+        /* Card faces with gradient background */
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cce3d0;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 2s;
+        }
+
+        /* Card front with a light sage gradient */
+        .card-front {
+            background: linear-gradient(135deg, #cfe2d0, #d8e4d4);  /* Light sage gradient */
+            background-color: #cfe2d0; /* Very light sage green */
+            color: #333; /* Dark text for contrast */
+        }
+
+        /* Card back with a distinct lighter sage gradient */
+        .card-back {
+            background: linear-gradient(135deg, #a6c8a1, #b9d5b0); /* Lighter sage with a hint of gray */
+            background-color: #a6c8a1; /* Soft sage green */
+            transform: rotateY(180deg);
+            color: #333; /* Dark text for contrast */
+        }
+
+
+
+
+        /* Hover effect */
+        .card:hover .card-front {
+            transform: rotateY(180deg);
+        }
+
+        .card:hover .card-back {
+            transform: rotateY(0deg);
+        }
+
+        .card {
+            position: relative;
+        }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .welcome-heading {
+                font-size: 2rem;
+            }
+
+            .features-section h2 {
+                font-size: 1.5rem;
+            }
+
+            .cards-container {
+                grid-template-columns: 1fr; /* Stack cards on small screens */
+            }
+          }
+    </style>
+{% endblock %}
